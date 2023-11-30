@@ -1,0 +1,144 @@
+<body>
+	<a href=https://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf>Reference card</a>
+	<input type="range" id="range" name="range" min="0" max="7"></input>
+	<canvas id='canvas1' width=500 height=500></canvas>
+</body>
+
+<style >
+	body {
+		background-color: #282828;
+		display: flex;
+		flex-direction: column;
+		align-items: center;	
+	}
+</style>
+
+<script>
+async function fetchShader(path) {
+	try {
+		const response = await fetch(path);
+		const text = await response.text();
+		return text;
+	} catch (error) {
+		console.error(`There was a problem fetching the shader from ${path}:`, error);
+	}
+}
+
+// THIS FUNCTION DOES ALL OF THE INITIALIZING FOR THE GPU PROGRAM.
+let start_gl = (canvas, meshData, vertexSize, vertexShader, fragmentShader) => {
+
+	// GET THE 3D CONTEXT OF THE CANVAS
+	let gl = canvas.getContext("webgl");
+
+	// CREATE A PROGRAM THAT WILL RUN ON THE GPU
+	let program = gl.createProgram();
+	gl.program = program;
+
+	// THIS IS HOW WE COMPILE AND ATTACH A SHADER TO THE GPU PROGRAM
+	let addshader = (type, src) => {
+		let shader = gl.createShader(type);
+		gl.shaderSource(shader, src);
+		gl.compileShader(shader);
+		if (! gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+			throw "Cannot compile shader:\n\n" + gl.getShaderInfoLog(shader);
+			console.log(gl.getShaderInfoLog(shader));
+		}
+		gl.attachShader(program, shader);
+	};
+
+	// ADD THE VERTEX AND FRAGMENT SHADERS
+	addshader(gl.VERTEX_SHADER  , vertexShader  );
+	addshader(gl.FRAGMENT_SHADER, fragmentShader);
+
+	// LINK THE PROGRAM AND REPORT ANY ERRORS
+	gl.linkProgram(program);
+	if (! gl.getProgramParameter(program, gl.LINK_STATUS))
+		throw "Could not link the shader program!";
+	gl.useProgram(program);
+
+	// DECLARE A PLACE FOR MY VERTICES TO GO DOWN ON THE GPU
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+
+	// PERMIT THE GPU TO RENDER NEARER THINGS IN FRONT OF FARTHER AWAY THINGS
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+
+	// SET ANY ONE ATTRIBUTE OF A VERTEX
+	let vertexAttribute = (name, size, position) => {
+		let attr = gl.getAttribLocation(program, name);
+		gl.enableVertexAttribArray(attr);
+		gl.vertexAttribPointer(attr, size, gl.FLOAT, false, vertexSize * 4, position * 4);
+	}
+
+	// SET THE POSITION ATTRIBUTE
+	vertexAttribute('aPos', 3, 0);
+
+	return gl;
+}
+
+// HERE WE ARE SETTING UP HOW THE CANVAS RESPONDS TO MOUSE EVENTS.
+let r = canvas1.getBoundingClientRect(), cursor = [0,0,0];
+let setCursor = (e, z) => cursor = [ (e.clientX - r.left) / canvas1.width * 2 - 1,
+	1 - (e.clientY - r.top) / canvas1.height * 2,
+	z !== undefined ? z : cursor[2] ];
+canvas1.onmousedown = e => setCursor(e, 1);
+canvas1.onmousemove = e => setCursor(e,  );
+canvas1.onmouseup   = e => setCursor(e, 0);
+
+// ALL OF THE 3D MESH SHAPES THAT WE ARE RENDERING (FOR NOW IT'S JUST ONE SHAPE)
+let meshData = [
+	{ type: 1, mesh: new Float32Array([ -1,1,0, 1,1,0, -1,-1,0, 1,-1,0 ]) },
+];
+
+(async () => {
+	// THE VERTEX SHADER, FOLLOWED BY THE FRAGMENT SHADER
+	let vertexSize = 3;
+	let vertexShader =  await fetchShader("./vertex.glsl");
+	let fragmentShader = await fetchShader("./frag.glsl");
+
+	// WAIT 100 MSECS BEFORE STARTING UP
+	setTimeout(() => {
+
+		// INITIALIZE GPU GRAPHICS
+		let gl = start_gl(canvas1, meshData, vertexSize, vertexShader, fragmentShader);
+
+		// PASS UNIFORM VARIABLES
+		let uTime   = gl.getUniformLocation(gl.program, "uTime"  );
+		let uCursor = gl.getUniformLocation(gl.program, "uCursor");
+		let uSlide  = gl.getUniformLocation(gl.program, "uSlide");
+
+		// WHEN DID WE START ANIMATING?
+		let startTime = Date.now() / 1000;
+
+		let slide = document.getElementById('range').value;
+
+        // Attach input event listener to the range input
+        document.getElementById('range').addEventListener('input', function() {
+            slide = this.value; // Update the slide variable with the new value of the range input
+        });
+        
+		// START THE ANIMATION LOOP
+		setInterval(() => {
+			// PASS ELAPSED TIME DOWN TO THE GPU
+			gl.uniform1f (uTime, Date.now() / 1000 - startTime);
+
+		    // PASS THE CURSOR STATE DOWN TO THE GPU
+			gl.uniform3fv(uCursor, cursor);
+
+			gl.uniform1i(uSlide, slide);
+
+			// LOOP THROUGH ALL OF MY SHAPES
+			for (let n = 0 ; n < meshData.length ; n++) {
+				// PULL OUT THE ACTUAL MESH DATA
+				let mesh = meshData[n].mesh;
+
+				// LOAD THAT DATA DOWN INTO THE GPU
+				gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
+				
+			    // RENDER THAT DATA ACCORDING TO WHAT TYPE IT IS
+				gl.drawArrays(meshData[n].type ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, mesh.length / vertexSize);
+			}
+		}, 30);
+	}, 100);
+})();
+</script>

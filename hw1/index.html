@@ -1,0 +1,102 @@
+<body>
+	<h3> Ball Bounce Simulator - Ahmet Ilten ai2068</h3>
+	<form id="ballCountForm">
+		<label> How Many Balls? </label>
+		<input type="number" id="ballCount">
+		<input type="button" id="startButton" value="Start Simulation">
+	</form>
+	<canvas id="GraphcisCanvas" width="500" height="500"></canvas>
+</body>	
+<style>
+	body{
+		background-color: #928374;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}	
+</style>
+<script>
+	const canvas = document.getElementById("GraphcisCanvas");		
+	const width = canvas.width;
+	const height = canvas.height;
+	const ctx = canvas.getContext("2d");
+
+	let intervalId = null;
+	
+	const ballInput = document.getElementById('startButton').addEventListener('click', () => {
+		if (intervalId) clearInterval(intervalId);
+
+		const ballCount = document.getElementById('ballCount').value;
+
+		let circles = [ballCount];
+		for (let i = 0; i < ballCount; i++) {
+			circles[i] = {
+				x: getRandom(0, 500), 
+				y: getRandom(0, 250), 
+				r: 30,
+				upward_force: 0,
+				bounce_force: 30,
+				random_x_force: 0, 
+				color: getRandomColor(),
+			};
+		}
+
+		let gravity = 10;
+
+		intervalId = setInterval(() => {
+			ctx.fillStyle = "#282828";
+			ctx.fillRect(0, 0, width, height);
+			
+			for (let i = 0; i < ballCount; i++) {
+				ctx.resetTransform();
+				ctx.beginPath();
+
+				//(x, y, r, sAngle, eAngle, counterclockwise)
+				ctx.arc(circles[i].x, circles[i].y, circles[i].r, 0, 2 * Math.PI); 
+				ctx.fillStyle = circles[i].color;
+				ctx.fill();
+
+				circles[i].y += gravity;
+				circles[i].y -= circles[i].upward_force;
+				circles[i].x += circles[i].random_x_force;
+				
+				if (circles[i].y >= height - (circles[i].r+5)) {
+					circles[i].upward_force = gravity + circles[i].bounce_force;	
+					circles[i].bounce_force /= 1.5;
+					if (circles[i].bounce_force >= 0.2) {
+						circles[i].random_x_force = getRandom(-3,3);
+					} else if (circles[i].bounce_force >= 0.2) {
+						// do nothing	
+					} else {
+						circles[i].random_x_force = 0;
+					}
+				}
+
+				if (circles[i].bounce_force <= 0.01) {
+					circles[i].upward_force = gravity;
+				} else if (circles[i].upward_force != 0) {
+					circles[i].upward_force = lerp(circles[i].upward_force, 0, 0.1);
+				}
+
+				if (circles[i].upward_force <= 0.01) {
+					circles[i].upward_force = 0;
+				}
+			}
+		}, 30);
+	});
+	
+	function lerp (start, end, amt){
+		return (1-amt)*start+amt*end;
+	}
+
+	function getRandom(min, max) {
+  		return Math.random() * (max - min) + min;
+	}
+
+	function getRandomColor() {
+	    const red = Math.floor(Math.random() * 256);
+	    const green = Math.floor(Math.random() * 256);
+	    const blue = Math.floor(Math.random() * 256);
+	return 'rgb(' + red + ',' + green + ',' + blue + ')';
+}
+</script>

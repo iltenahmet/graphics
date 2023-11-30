@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<script src=js/g.js></script>
+<script src=js/m4.js></script>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body onload=start()>
+	<h3>Bezier Splines: Part 1</h3>
+	<canvas id=canvas1 width=400 height=400 tabindex=1></canvas>
+	<script src="script.js"></script>
+	<p>
+		Artists and designers often find it more convenient
+		to create splines by moving points around, rather
+		than needing to deal with derivatives.
+		The <i>Bezier</i> spline enables designers
+		of spline curves
+		to work this way.
+	</p>
+	<p>
+		Bezier splines work by repeated linear interpolation.
+		For example, the image to the right shows a simplified
+		version of a Bezier spline, using three key points
+		to specify a parametric quadratic spline.
+	</p>
+	<p>
+		Note that points along the curve are
+		found as a linear interpolation of linear interpolations.
+		We first find points along the edges AB and BC
+		by linear interpolations (to get the points represented as red dots):
+	</p>
+	<p>
+		<font color=red>(1 - t) A + t B</font>
+	</p>
+	<p>
+		<font color=red>(1 - t) B + t C</font>
+	</p>
+	<p>
+		and then we interpolate again (to get the point represented as a purple dot):
+	</p>
+	<p>
+		<font color=#dd95b4>P = (1 - t) <font color=red>(( 1 - t) A + t B)</font> + t <font color=red>((1 - t) B + t C)</font></font>
+	</p>
+	<p>
+		If we multiply out all the terms, we get:
+	</p>
+	<p>
+		<font color=#dd95b4> A (1-t)<sup>2</sup> + 2 B (1-t) t + C t<sup>2</sup> </font>
+	</p>
+	<p>
+		Note that the weights of the coefficients (1 2 1) follow Pascal's triangle.
+	</p>
+</body>
+
+
+
+
