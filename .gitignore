@@ -1,0 +1,13 @@
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+*.DS_Store
+*.out
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.vs
+*.dSYM
+*.vscode
+python
