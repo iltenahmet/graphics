@@ -208,8 +208,8 @@ setTimeout(() => {
 	setInterval(() => {
 		let time = Date.now() / 1000 - startTime;
 
-		let c = Math.cos(2 * time);
-		let s = Math.sin(2 * time);
+		let cos = Math.cos(2 * time);
+		let sin = Math.sin(2 * time);
 	  
 		let view = -.50 + 1.00 * turnView.value / 100;
 		let sw   =  .06 +  .12 * shoulderWidth.value / 100;
@@ -249,14 +249,14 @@ setTimeout(() => {
 
 		mMove(0,.5,0);
 		mSave();
-			mTurnZ(s/8);
+			mTurnZ(sin /8);
 			mSave();
 				mMove(sw,0,0);
-				limb(al, .025, c + .3, s - 1);     // LEFT ARM
+				limb(al, .025, cos + .3, sin - 1);     // LEFT ARM
 			mRestore();
 			mSave();
 				mMove(-sw,0,0);
-				limb(al, .025, -c + .3, -s - 1);   // RIGHT ARM
+				limb(al, .025, -cos + .3, -sin - 1);   // RIGHT ARM
 			mRestore();
 		mRestore();
 
@@ -264,18 +264,18 @@ setTimeout(() => {
 
 		mMove(0,-.3,0);
 		mSave();
-			mTurnZ(-s/8);
+			mTurnZ(-sin/8);
 	 		mSave();
 		 		mScale(hw,hw/2,hw/2);
 		 		drawShape(sphere20, [1,1,1]);
 	 		mRestore();
 			mSave();
 				mMove(hw,0,0);
-				limb(ll, .035, -c - .3, -s + 1);     // LEFT LEG
+				limb(ll, .035, -cos - .3, -sin + 1);     // LEFT LEG
 			mRestore();
 			mSave();
 				mMove(-hw,0,0);
-				limb(ll, .035, c - .3, s + 1);   // RIGHT LEG
+				limb(ll, .035, cos - .3, sin + 1);   // RIGHT LEG
 			mRestore();
 		mRestore();
 
