@@ -86,7 +86,7 @@ let createTriangleStrip = (nu, nv, p) => {
 	return triangleStrip;
 }
 
-let strToTriangles = str => {
+let stringToTriangles = str => {
 	let vertices = [];
 	for (let n = 0 ; n < str.length ; n++)
 		switch (str.charAt(n)) {
@@ -150,14 +150,14 @@ let torus = (nu, nv) => createTriangleStrip(nu, nv, (u,v) => {
 	return [ x,y,z, cp*ct,cp*st,sp ];
 });
 
-let cube = strToTriangles(`PNP00P PPP00P NPP00P  NPP00P NNP00P PNP00P
+let cube = stringToTriangles(`PNP00P PPP00P NPP00P  NPP00P NNP00P PNP00P
 						   NPN00N PPN00N PNN00N  PNN00N NNN00N NPN00N
 						   PPNP00 PPPP00 PNPP00  PNPP00 PNNP00 PPNP00
 						   NNPN00 NPPN00 NPNN00  NPNN00 NNNN00 NNPN00
 						   NPP0P0 PPP0P0 PPN0P0  PPN0P0 NPN0P0 NPP0P0
 						   PNN0N0 PNP0N0 NNP0N0  NNP0N0 NNN0N0 PNN0N0`);
 
-let octahedron = strToTriangles(`00Nnnn 0N0nnn N00nnn  P00pnn 0N0pnn 00Npnn
+let octahedron = stringToTriangles(`00Nnnn 0N0nnn N00nnn  P00pnn 0N0pnn 00Npnn
 								 N00npn 0P0npn 00Nnpn  00Nppn 0P0ppn P00ppn
 								 00Pnnp 0N0nnp N00nnp  P00pnp 0N0pnp 00Ppnp
 								 N00npp 0P0npp 00Pnpp  00Pppp 0P0ppp P00ppp`);
