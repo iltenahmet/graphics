@@ -31,27 +31,28 @@ function sphere(nu, nv) {
 }
 
 function sphere_p(u, v) {
-		let theta = 2 * Math.PI * u;
-		let phi = Math.PI * (v - .5);
+	let theta = 2 * Math.PI * u;
+	let phi = Math.PI * (v - .5);
 
-		let x = Math.cos(phi) * Math.cos(theta);
-		let y = Math.cos(phi) * Math.sin(theta);
-		let z = Math.sin(phi);
+	let x = Math.cos(phi) * Math.cos(theta);
+	let y = Math.cos(phi) * Math.sin(theta);
+	let z = Math.sin(phi);
 
-		return [ x,y,z, x,y,z ];
+	return [ x,y,z, x,y,z ];
 }
 
 function tube(nu, nv) {
-	function tube_p(u, v){
-		let theta = 2 * Math.PI * u;
-
-		let x = Math.cos(theta);
-		let y = Math.sin(theta);
-		let z = 2 * v - 1;
-
-		return [ x,y,z, x,y,0 ];
-	}
 	return createTriangleStrip(nu, nv, tube_p);
+}
+
+function tube_p(u, v){
+	let theta = 2 * Math.PI * u;
+
+	let x = Math.cos(theta);
+	let y = Math.sin(theta);
+	let z = 2 * v - 1;
+
+	return [ x,y,z, x,y,0 ];
 }
 
 let disk = (nu, nv) => createTriangleStrip(nu, nv, (u,v) => {

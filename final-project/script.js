@@ -1,52 +1,75 @@
+// global variables
+let gl = null;
+let uColor = null; 
+let uMatrix = null;
+let uInvMatrix = null;
+
 let vertexSize = 6;
-let vertexShader = `
-	attribute vec3 aPos, aNor;
-	uniform mat4 uMatrix, uInvMatrix;
-	varying vec3 vPos, vNor;
-	void main() {
-		vec4 pos = uMatrix * vec4(aPos, 1.0);
-		vec4 nor = vec4(aNor, 0.0) * uInvMatrix;
-		vPos = pos.xyz;
-		vNor = nor.xyz;
-		gl_Position = pos * vec4(1.,1.,-.1,1.);
-	}
-`;
-let fragmentShader = `
-	precision mediump float;
-	uniform vec3 uColor;
-	varying vec3 vPos, vNor;
-	void main(void) {
-		float c = .05 + max(0., dot(normalize(vNor), vec3(.57)));
-		vec3 color = vec3(.03,.04,.08) + c * uColor;
-		gl_FragColor = vec4(sqrt(color), 1.);
-	}
-`;
+let vertexShader = "";
+let fragmentShader = "";
+main();
 
-setTimeout(() => {
-	let gl = start_gl(canvas1, vertexSize, vertexShader, fragmentShader);
+async function main() {
+	vertexShader =  await fetchShader("./vert.glsl");
+	fragmentShader = await fetchShader("./frag.glsl");
+	setTimeout(afterTimeOut, 100);
+}
 
-	let uColor     = gl.getUniformLocation(gl.program, "uColor");
-	let uMatrix    = gl.getUniformLocation(gl.program, "uMatrix");
-	let uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
-
-	let drawShape = (mesh, color) => {
-		gl.uniform3fv      (uColor    , color);
-		gl.uniformMatrix4fv(uMatrix   , false, m());
-		gl.uniformMatrix4fv(uInvMatrix, false, mInverse(m()));
-		gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
-		gl.drawArrays(mesh.type == 'TRIANGLES' ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, mesh.length / vertexSize);
-	}
+function afterTimeOut() {
+	gl = start_gl(canvas1, vertexSize, vertexShader, fragmentShader);
+	uColor = gl.getUniformLocation(gl.program, "uColor");
+	uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
+	uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
 
 	let startTime = Date.now() / 1000;
-	setInterval(() => {
-		let time = Date.now() / 1000 - startTime;
+	setInterval(tick(startTime), 30);
+} 
 
-		mIdentity();
+function tick(startTime) {
+	let time = Date.now() / 1000 - startTime;
 
-		let color = [.6,.3,.2];
-		drawShape(sphere(20, 10), color);	
-		
-		drawShape(tube(20, 10), color);	
+	let color = [.6,.3,.2];
 
-	}, 30);
-}, 100);
+	mSet(mIdentity());	
+
+	mDuplicate();
+		mTurnX(time * 2);	
+		mPerspective(3);
+		mTurnY(time);
+
+		mScale(.16,.16,.16);	
+		//drawShape(cube, color);	
+		drawShape(sphere(20, 10), color)
+	mPop();
+
+	mDuplicate();
+		mMove(100, 0, 0);
+		drawShape(sphere(20, 10), color)
+	mPop();
+	
+}
+
+function drawShape(mesh, color) {
+	if (gl == null) {
+		console.error("gl is null, can't drawShape");
+		return;
+	}
+
+	gl.uniform3fv(uColor, color);
+	gl.uniformMatrix4fv(uMatrix, false, mTop());
+	gl.uniformMatrix4fv(uInvMatrix, false, mInverse(mTop()));
+	gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
+	gl.drawArrays(mesh.type == 'TRIANGLES' ? 
+								gl.TRIANGLES : 
+								gl.TRIANGLE_STRIP, 0, mesh.length / vertexSize);
+}
+
+async function fetchShader(path) {
+	try {
+		const response = await fetch(path);
+		const text = await response.text();
+		return text;
+	} catch (error) {
+		console.error(`There was a problem fetching the shader from ${path}:`, error);
+	}
+}
