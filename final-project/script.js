@@ -87,8 +87,6 @@ function tick() {
 		mPop();
 	}
 
-	// ARMS
-
 	mMove(0,.5,0);
 	mDuplicate();
 		mTurnZ(sin /8);
