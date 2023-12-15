@@ -59,33 +59,14 @@ function tick() {
 	let hw   =  .03 +  .06 * 0.5 / 100;
 	let ll   =  .08 +  .16 * 0.5 / 100;
 
-	mSet(mIdentity());
+		mSet(mIdentity());
 	mProject(0,0,-1/3);
 
 	mTurnY(view);
 
+	//mPerspective(sin);		
+
 	// GENERIC LIMB
-
-	let limb = (length, thickness, shoulder, elbow) => {
-		mDuplicate();
-			mTurnX(shoulder);
-			mMove(0,-length,0);
-
-			mDuplicate();
-				mScale(thickness,length,thickness);
-				drawShape(sphere20, skinColor); // UPPER LIMB
-			mPop();
-
-			mMove(0,-length,0);
-			mTurnX(elbow); 
-			mMove(0,-length,0);
-
-			mDuplicate();
-				mScale(thickness*.8,length,thickness*.8);
-				drawShape(sphere20, skinColor); // LOWER LIMB
-			mPop();
-		mPop();
-	}
 
 	mMove(0,.5,0);
 	mDuplicate();
@@ -120,3 +101,23 @@ function tick() {
 	mPop();
 }
 
+function limb(length, thickness, shoulder, elbow) {
+	mDuplicate();
+		mTurnX(shoulder);
+		mMove(0,-length,0);
+
+		mDuplicate();
+			mScale(thickness,length,thickness);
+			drawShape(sphere20, skinColor); // UPPER LIMB
+		mPop();
+
+		mMove(0,-length,0);
+		mTurnX(elbow); 
+		mMove(0,-length,0);
+
+		mDuplicate();
+			mScale(thickness*.8,length,thickness*.8);
+			drawShape(sphere20, skinColor); // LOWER LIMB
+		mPop();
+	mPop();
+}
