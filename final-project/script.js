@@ -35,6 +35,21 @@ function afterTimeOut() {
 	uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
 	uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
 
+	// TODO: create matrix stack push identity
+	let stack = [];
+	stack.push(mIdentity());
+	console.log(stack);
+
+	let matrix = [ 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1 ];
+	mStackSet(stack, matrix);
+	console.log(stack);
+
+	let m2 = mInverse(mIdentity());
+	stack.push(m2);
+	console.log(stack);
+
+
+
 	startTime = Date.now() / 1000;
 	setInterval(tick, 30);
 } 
@@ -59,15 +74,16 @@ function tick() {
 	let hw   =  .03 +  .06 * 0.5 / 100;
 	let ll   =  .08 +  .16 * 0.5 / 100;
 
-		mSet(mIdentity());
+
+		/*
+	mSet(mIdentity());
 	mProject(0,0,-1/3);
 
 	mTurnY(view);
 
-	//mPerspective(sin);		
 
 	// GENERIC LIMB
-
+	
 	mMove(0,.5,0);
 	mDuplicate();
 		mTurnZ(sin /8);
@@ -99,6 +115,7 @@ function tick() {
 			limb(ll, .035, cos - .3, sin + 1);   // RIGHT LEG
 		mPop();
 	mPop();
+	*/	
 }
 
 function limb(length, thickness, shoulder, elbow) {
