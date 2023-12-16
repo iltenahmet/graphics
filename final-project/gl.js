@@ -42,7 +42,8 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 
 	// Set Position and Normal attributes
 	vertexAttribute('aPos', 3, 0);
-	//vertexAttribute('aNor', 3, 3);
+	vertexAttribute('aCol', 3, 3);
+	vertexAttribute('aUV' , 2, 6); 
 	
 
 	return gl;

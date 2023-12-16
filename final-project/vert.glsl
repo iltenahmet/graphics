@@ -1,10 +1,12 @@
 attribute vec3 aPos;
-varying   vec3 vPos;
+attribute vec3 aCol;
+attribute vec2 aUV;
 
 varying vec4 vertexColor;
+varying vec2 texCoord;
 
 void main() {
 	gl_Position = vec4(aPos, 1.0);
-	vPos = aPos;
-	vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
+	vertexColor = vec4(aCol, 1.0);
+	texCoord = aUV;
 }
