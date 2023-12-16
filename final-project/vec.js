@@ -1,19 +1,30 @@
-   function vec3Dot(a, b){
-      return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+class vec3 {
+   constructor(x, y, z) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
    }
 
-   function vec3Length(v) {
-      return Math.sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+   dot(other){
+      return (this.x * other.x + this.y * other.y +this.z * other.z);
    }
 
-   function vec3Normalize(v) {
-      let len = vec3Length(v);
+   length() {
+      return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z);
+   }
+
+   normalize() {
+      let len = this.length();
       if (len == 0) return;
 
-      v[0] /= len;
-      v[1] /= len;
-      v[2] /= len;
-
-      return v;
+      this.x /= len;
+      this.y /= len;
+      this.z /= len;
    }
 
+   set(other) {
+      this.x = other.x;
+      this.y = other.y;
+      this.z = other.z;
+   }
+}

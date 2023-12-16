@@ -1,10 +1,10 @@
-attribute vec3 aPos, aNor;
-uniform mat4 uMatrix, uInvMatrix;
-varying vec3 vPos, vNor;
+attribute vec3 aPos;
+varying   vec3 vPos;
+
+varying vec4 vertexColor;
+
 void main() {
-	vec4 pos = uMatrix * vec4(aPos, 1.0);
-	vec4 nor = vec4(aNor, 0.0) * uInvMatrix;
-	vPos = pos.xyz;
-	vNor = nor.xyz;
-	gl_Position = pos * vec4(1.,1.,-.1,1.);
+	gl_Position = vec4(aPos, 1.0);
+	vPos = aPos;
+	vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

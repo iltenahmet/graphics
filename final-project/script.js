@@ -5,9 +5,6 @@ let uMatrix = null;
 let uInvMatrix = null;
 let startTime = 0;
 
-let sphere20  = sphere(20,10);
-let skinColor = [.6,.3,.2];
-
 async function fetchShader(path) {
 	try {
 		const response = await fetch(path);
@@ -18,7 +15,7 @@ async function fetchShader(path) {
 	}
 }
 
-let vertexSize = 6;
+let vertexSize = 3;
 let vertexShader = "";
 let fragmentShader = "";
 main();
@@ -31,28 +28,42 @@ async function main() {
 
 function afterTimeOut() {
 	gl = start_gl(canvas1, vertexSize, vertexShader, fragmentShader);
-	uColor = gl.getUniformLocation(gl.program, "uColor");
-	uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
-	uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
-
-	// TODO: create matrix stack push identity
-	let stack = [];
-	stack.push(mIdentity());
-	console.log(stack);
-
-	let matrix = [ 1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1 ];
-	mStackSet(stack, matrix);
-	console.log(stack);
-
-	let m2 = mInverse(mIdentity());
-	stack.push(m2);
-	console.log(stack);
-
-
+	//uColor = gl.getUniformLocation(gl.program, "uColor");
+	//uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
+	//uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
+	
 
 	startTime = Date.now() / 1000;
 	setInterval(tick, 30);
 } 
+
+function tick() {
+	let time = Date.now() / 1000 - startTime;
+	let green = s(time) / 2.0 + 0.5;
+
+	let vertexColorLocation = gl.getUniformLocation(gl.program, "ourColor");
+
+	gl.uniform4f(vertexColorLocation, 0, green, 0, 1);
+
+	let vertices = new Float32Array([
+    // first triangle
+     0.5,  0.5, 0.0,  // top right
+     0.5, -0.5, 0.0,  // bottom right
+    -0.5,  0.5, 0.0,  // top left 
+    // second triangle
+     0.5, -0.5, 0.0,  // bottom right
+    -0.5, -0.5, 0.0,  // bottom left
+    -0.5,  0.5, 0.0   // top left
+	]); 
+		
+	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+	gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+}
+// ALL OF THE 3D MESH SHAPES THAT WE ARE RENDERING (FOR NOW IT'S JUST ONE SHAPE)
+let meshData = [
+	{ type: 1, mesh: new Float32Array([ -1,1,0, 1,1,0, -1,-1,0, 1,-1,0 ]) },
+];
 
 function drawShape(mesh, color) {
 	gl.uniform3fv      (uColor    , color);
@@ -60,81 +71,4 @@ function drawShape(mesh, color) {
 	gl.uniformMatrix4fv(uInvMatrix, false, mInverse(mTop()));
 	gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
 	gl.drawArrays(mesh.type == 'TRIANGLES' ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, mesh.length / vertexSize);
-}
-
-function tick() {
-	let time = Date.now() / 1000 - startTime;
-
-	let cos = Math.cos(2 * time);
-	let sin = Math.sin(2 * time);
-  
-	let view = -.50 + 1.00 * 0.5 / 100;
-	let sw   =  .06 +  .12 * 0.5 / 100;
-	let al   =  .06 +  .12 * 0.5 / 100;
-	let hw   =  .03 +  .06 * 0.5 / 100;
-	let ll   =  .08 +  .16 * 0.5 / 100;
-
-
-		/*
-	mSet(mIdentity());
-	mProject(0,0,-1/3);
-
-	mTurnY(view);
-
-
-	// GENERIC LIMB
-	
-	mMove(0,.5,0);
-	mDuplicate();
-		mTurnZ(sin /8);
-		mDuplicate();
-			mMove(sw,0,0);
-			limb(al, .025, cos + .3, sin - 1);     // LEFT ARM
-		mPop();
-		mDuplicate();
-			mMove(-sw,0,0);
-			limb(al, .025, -cos + .3, -sin - 1);   // RIGHT ARM
-		mPop();
-	mPop();
-
-	// LEGS
-
-	mMove(0,-.3,0);
-	mDuplicate();
-		mTurnZ(-sin/8);
-		mDuplicate();
-			mScale(hw,hw/2,hw/2);
-			drawShape(sphere20, [1,1,1]);
-		mPop();
-		mDuplicate();
-			mMove(hw,0,0);
-			limb(ll, .035, -cos - .3, -sin + 1);     // LEFT LEG
-		mPop();
-		mDuplicate();
-			mMove(-hw,0,0);
-			limb(ll, .035, cos - .3, sin + 1);   // RIGHT LEG
-		mPop();
-	mPop();
-	*/	
-}
-
-function limb(length, thickness, shoulder, elbow) {
-	mDuplicate();
-		mTurnX(shoulder);
-		mMove(0,-length,0);
-
-		mDuplicate();
-			mScale(thickness,length,thickness);
-			drawShape(sphere20, skinColor); // UPPER LIMB
-		mPop();
-
-		mMove(0,-length,0);
-		mTurnX(elbow); 
-		mMove(0,-length,0);
-
-		mDuplicate();
-			mScale(thickness*.8,length,thickness*.8);
-			drawShape(sphere20, skinColor); // LOWER LIMB
-		mPop();
-	mPop();
 }

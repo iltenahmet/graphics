@@ -218,6 +218,9 @@ setTimeout(() => {
    let uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
 
    let startTime = Date.now() / 1000;
+   
+   console.log(cube); 
+
    setInterval(() => {
       let time = Date.now() / 1000 - startTime;
 

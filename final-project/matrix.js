@@ -19,24 +19,30 @@ let mMult = (a, b) => {
       dst.push(a[n&3]*b[n&12] + a[n&3|4]*b[n&12|1] + a[n&3|8]*b[n&12|2] + a[n&3|12]*b[n&12|3]);
    return dst;
 }
+
 let mTranslate = (tx,ty,tz, m) => {
    return mMult(m, [1,0,0,0, 0,1,0,0, 0,0,1,0, tx,ty,tz,1]);
 }
+
 let mRotateX = (theta, m) => {
    let c = Math.cos(theta), s = Math.sin(theta);
    return mMult(m, [1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
 }
+
 let mRotateY = (theta, m) => {
    let c = Math.cos(theta), s = Math.sin(theta);
    return mMult(m, [c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);
 }
+
 let mRotateZ = (theta, m) => {
    let c = Math.cos(theta), s = Math.sin(theta);
    return mMult(m, [c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]);
 }
+
 let mScale = (sx,sy,sz, m) => {
    return mMult(m, [sx,0,0,0, 0,sy,0,0, 0,0,sz,0, 0,0,0,1]);
 }
+
 let mPerspective = (fl, m) => {
    return mMult(m, [1,0,0,0, 0,1,0,0, 0,0,1,-1/fl, 0,0,0,1]);
 }
