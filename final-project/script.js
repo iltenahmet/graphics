@@ -23,6 +23,10 @@ function afterTimeOut() {
 	//uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
 	//
 	addTexture(0, 'container.jpg');
+	addTexture(1, 'awesomeface.png');
+
+	let textures = gl.getUniformLocation(gl.program, "textures");
+	gl.uniform1iv(textures, [0,1]);
 	
 
 	startTime = Date.now() / 1000;
@@ -37,12 +41,11 @@ function tick() {
 
 	gl.uniform4f(vertexColorLocation, 0, green, 0, 1);
 
-	//								  vertex              color          texture coords
+	//								  vertex             color           texture coords
 	let vertices = new Float32Array([-1.0,   1.0,  0.0,  1.0, 0.0, 0.0,  0.0, 1.0,
 									 -1.0,  -1.0,  0.0,  0.0, 1.0, 0.0,  0.0, 0.0,
 									  1.0,   1.0,  0.0,  0.0, 1.0, 0.0,  1.0, 1.0,
 									  1.0,  -1.0,  0.0,  0.0, 0.0, 1.0,  1.0, 0.0 ]); 
-
 		
 		
 	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
@@ -71,7 +74,7 @@ let addTexture = (index, file) => {
 	}
 	image.src = file;
 }
-
+	
 async function fetchShader(path) {
 	try {
 		const response = await fetch(path);
