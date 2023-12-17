@@ -6,7 +6,6 @@ let invMatrix = null;
 let vertices = null;
 let startTime = 0;
 
-//let vertexSize = 11;
 let vertexSize = 5;
 let vertexShader = "";
 let fragmentShader = "";
@@ -20,8 +19,7 @@ async function main() {
 
 function afterTimeOut() {
 	gl = start_gl(canvas1, vertexSize, vertexShader, fragmentShader);
-	//uColor = gl.getUniformLocation(gl.program, "uColor");
-	//
+
 	matrix = gl.getUniformLocation(gl.program, "matrix");
 	invMatrix = gl.getUniformLocation(gl.program, "invMatrix");
 
@@ -31,51 +29,6 @@ function afterTimeOut() {
 	let textures = gl.getUniformLocation(gl.program, "textures");
 	gl.uniform1iv(textures, [0,1]);
 
-	//vertices = sphere(20, 10);
-	vertices = new Float32Array([
-    -0.5, -0.5, -0.5,  0.0, 0.0,
-     0.5, -0.5, -0.5,  1.0, 0.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-    -0.5,  0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 0.0,
-
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 1.0,
-     0.5,  0.5,  0.5,  1.0, 1.0,
-    -0.5,  0.5,  0.5,  0.0, 1.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-
-    -0.5,  0.5,  0.5,  1.0, 0.0,
-    -0.5,  0.5, -0.5,  1.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-    -0.5,  0.5,  0.5,  1.0, 0.0,
-
-     0.5,  0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5,  0.5,  0.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-     0.5, -0.5, -0.5,  1.0, 1.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-     0.5, -0.5,  0.5,  1.0, 0.0,
-    -0.5, -0.5,  0.5,  0.0, 0.0,
-    -0.5, -0.5, -0.5,  0.0, 1.0,
-
-    -0.5,  0.5, -0.5,  0.0, 1.0,
-     0.5,  0.5, -0.5,  1.0, 1.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-     0.5,  0.5,  0.5,  1.0, 0.0,
-    -0.5,  0.5,  0.5,  0.0, 0.0,
-    -0.5,  0.5, -0.5,  0.0, 1.0
-	]);
-
 	startTime = Date.now() / 1000;
 	setInterval(tick, 30);
 } 
@@ -83,20 +36,44 @@ function afterTimeOut() {
 function tick() {
 	let time = Date.now() / 1000 - startTime;
 
-	let m = mIdentity();
-	m = mPerspective(3, m);
-	m = mRotateX(-1, m);
-	m = mTranslate(0, s(time) / 2, 0, m);
+	let  cubePositions = [
+	   new vec3( 0.0,  0.0,  0.0), 
+	   new vec3( 0.1,  0.1, 0.1), 
+	   new vec3(-1.5, -2.2, -2.5),  
+	   new vec3(-3.8, -2.0, -12.3),  
+	   new vec3( 2.4, -0.4, -3.5),  
+	   new vec3(-1.7,  3.0, -7.5),  
+	   new vec3( 1.3, -2.0, -2.5),  
+	   new vec3( 1.5,  2.0, -2.5), 
+	   new vec3( 1.5,  0.2, -1.5), 
+	   new vec3(-1.3,  1.0, -1.5)  
+	];
+	
+	
+	for(let i = 0; i < 10; i++)
+	{
+		let m = mIdentity();
+		m = mPerspective(-3, m);
+		m = mTranslate(cubePositions[i].x, cubePositions[i].y, cubePositions[i].z, m);
+		let angle = 20.0 * i; 
+		m = mRotateX(angle, m);
+		m = mRotateY(angle * 0.3 , m);
+		m = mRotateY(angle * 0.5, m);
 
-	gl.uniformMatrix4fv(matrix   , false, m);
-	gl.uniformMatrix4fv(invMatrix, false, mInverse(m));
-		
-	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-	gl.drawArrays(gl.TRIANGLES, 0, vertices.length / vertexSize);
+		drawShape(m, cube); 	
+	}
+
 
 }
 
-function drawShape(mesh, color) {
+function drawShape(m, mesh) {
+	gl.uniformMatrix4fv(matrix   , false, m);
+	gl.uniformMatrix4fv(invMatrix, false, mInverse(m));
+	gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
+	gl.drawArrays(gl.TRIANGLES, 0, mesh.length / vertexSize);
+}
+
+function drawShapeFromStack(mesh, color) {
 	gl.uniform3fv      (uColor    , color);
 	gl.uniformMatrix4fv(matrix   , false, mTop());
 	gl.uniformMatrix4fv(invMatrix, false, mInverse(mTop()));

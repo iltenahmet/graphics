@@ -38,7 +38,8 @@ function sphere_p(u, v) {
 	let y = Math.cos(phi) * Math.sin(theta);
 	let z = Math.sin(phi);
 
-	return [ x,y,z, x,y,z ];
+	//return [ x,y,z, x,y,z, u, v];
+	return [ x,y,z, u, v];
 }
 
 function tube(nu, nv) {
@@ -87,15 +88,67 @@ let torus = (nu, nv) => createTriangleStrip(nu, nv, (u,v) => {
 	return [ x,y,z, cp*ct,cp*st,sp ];
 });
 
+/*
 let cube = stringToTriangles(`PNP00P PPP00P NPP00P  NPP00P NNP00P PNP00P
 							  NPN00N PPN00N PNN00N  PNN00N NNN00N NPN00N
 						      PPNP00 PPPP00 PNPP00  PNPP00 PNNP00 PPNP00
 						      NNPN00 NPPN00 NPNN00  NPNN00 NNNN00 NNPN00
 							  NPP0P0 PPP0P0 PPN0P0  PPN0P0 NPN0P0 NPP0P0
 						      PNN0N0 PNP0N0 NNP0N0  NNP0N0 NNN0N0 PNN0N0`);
+*/
 
 let octahedron = stringToTriangles(`00Nnnn 0N0nnn N00nnn  P00pnn 0N0pnn 00Npnn
 								 N00npn 0P0npn 00Nnpn  00Nppn 0P0ppn P00ppn
 								 00Pnnp 0N0nnp N00nnp  P00pnp 0N0pnp 00Ppnp
 								 N00npp 0P0npp 00Pnpp  00Pppp 0P0ppp P00ppp`);
+
+let plane = (nu, nv) => createTriangleStrip(nu, nv, (u,v) => {
+   return [ 2*u-1,2*v-1,0,  0,0,1, u,v, 1,0,0 ]
+});
+
+let cube = new Float32Array([
+	// vertices        // texture coord
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+     0.5, -0.5, -0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0
+	]);
+	
 

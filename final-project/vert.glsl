@@ -1,5 +1,5 @@
 attribute vec3 aPos;
-//attribute vec3 aNor;
+attribute vec3 aNor;
 attribute vec2 aUV;
 //attribute vec2 aTan;
 
