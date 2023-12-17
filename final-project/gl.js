@@ -40,11 +40,15 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 		gl.vertexAttribPointer(attr, size, gl.FLOAT, false, vertexSize * 4, position * 4);
 	}
 
-	// Set Position and Normal attributes
-	vertexAttribute('aPos', 3, 0);
-	vertexAttribute('aCol', 3, 3);
-	vertexAttribute('aUV' , 2, 6); 
 	
+	// Vertex structure: pos: x y z normal: Nx Ny Nz  textureCoordinates: u v  Tangent: Tx Ty Tz
+	vertexAttribute('aPos', 3, 0);
+	//vertexAttribute('aNor', 3, 3);
+	//vertexAttribute('aUV' , 2, 6);
+	//vertexAttribute('aTan', 3, 8);
+	
+
+	vertexAttribute('aUV', 2, 3);
 
 	return gl;
 }

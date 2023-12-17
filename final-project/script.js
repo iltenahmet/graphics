@@ -1,11 +1,13 @@
 // global variables
 let gl = null;
 let uColor = null; 
-let uMatrix = null;
-let uInvMatrix = null;
+let matrix = null;
+let invMatrix = null;
+let vertices = null;
 let startTime = 0;
 
-let vertexSize = 8;
+//let vertexSize = 11;
+let vertexSize = 5;
 let vertexShader = "";
 let fragmentShader = "";
 main();
@@ -19,15 +21,60 @@ async function main() {
 function afterTimeOut() {
 	gl = start_gl(canvas1, vertexSize, vertexShader, fragmentShader);
 	//uColor = gl.getUniformLocation(gl.program, "uColor");
-	//uMatrix = gl.getUniformLocation(gl.program, "uMatrix");
-	//uInvMatrix = gl.getUniformLocation(gl.program, "uInvMatrix");
 	//
+	matrix = gl.getUniformLocation(gl.program, "matrix");
+	invMatrix = gl.getUniformLocation(gl.program, "invMatrix");
+
 	addTexture(0, 'container.jpg');
-	addTexture(1, 'awesomeface.png');
+	addTexture(1, 'skeleton.png');
 
 	let textures = gl.getUniformLocation(gl.program, "textures");
 	gl.uniform1iv(textures, [0,1]);
-	
+
+	//vertices = sphere(20, 10);
+	vertices = new Float32Array([
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+     0.5, -0.5, -0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 0.0,
+
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 1.0,
+    -0.5,  0.5,  0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5, -0.5,  1.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5,  0.5,  1.0, 0.0,
+
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5,  0.5,  0.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+     0.5, -0.5, -0.5,  1.0, 1.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+     0.5, -0.5,  0.5,  1.0, 0.0,
+    -0.5, -0.5,  0.5,  0.0, 0.0,
+    -0.5, -0.5, -0.5,  0.0, 1.0,
+
+    -0.5,  0.5, -0.5,  0.0, 1.0,
+     0.5,  0.5, -0.5,  1.0, 1.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+     0.5,  0.5,  0.5,  1.0, 0.0,
+    -0.5,  0.5,  0.5,  0.0, 0.0,
+    -0.5,  0.5, -0.5,  0.0, 1.0
+	]);
 
 	startTime = Date.now() / 1000;
 	setInterval(tick, 30);
@@ -35,28 +82,24 @@ function afterTimeOut() {
 
 function tick() {
 	let time = Date.now() / 1000 - startTime;
-	let green = s(time) / 2.0 + 0.5;
 
-	let vertexColorLocation = gl.getUniformLocation(gl.program, "ourColor");
+	let m = mIdentity();
+	m = mPerspective(3, m);
+	m = mRotateX(-1, m);
+	m = mTranslate(0, s(time) / 2, 0, m);
 
-	gl.uniform4f(vertexColorLocation, 0, green, 0, 1);
-
-	//								  vertex             color           texture coords
-	let vertices = new Float32Array([-1.0,   1.0,  0.0,  1.0, 0.0, 0.0,  0.0, 1.0,
-									 -1.0,  -1.0,  0.0,  0.0, 1.0, 0.0,  0.0, 0.0,
-									  1.0,   1.0,  0.0,  0.0, 1.0, 0.0,  1.0, 1.0,
-									  1.0,  -1.0,  0.0,  0.0, 0.0, 1.0,  1.0, 0.0 ]); 
-		
+	gl.uniformMatrix4fv(matrix   , false, m);
+	gl.uniformMatrix4fv(invMatrix, false, mInverse(m));
 		
 	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length / vertexSize);
+	gl.drawArrays(gl.TRIANGLES, 0, vertices.length / vertexSize);
 
 }
 
 function drawShape(mesh, color) {
 	gl.uniform3fv      (uColor    , color);
-	gl.uniformMatrix4fv(uMatrix   , false, mTop());
-	gl.uniformMatrix4fv(uInvMatrix, false, mInverse(mTop()));
+	gl.uniformMatrix4fv(matrix   , false, mTop());
+	gl.uniformMatrix4fv(invMatrix, false, mInverse(mTop()));
 	gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
 	gl.drawArrays(mesh.type == 'TRIANGLES' ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, mesh.length / vertexSize);
 }
