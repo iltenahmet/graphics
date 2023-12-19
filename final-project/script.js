@@ -317,6 +317,8 @@ function handleInput() {
 		lastProjectileTime = Date.now() / 1000;
 
 		projectiles.push(new vec3(viewPos.x, viewPos.y - 0.5, viewPos.z));
+		
+		// view direction become the projectile movement direction
 		viewDirection.normalize();
 		projectilesDir.push(new vec3(viewDirection.x, viewDirection.y, viewDirection.z));
 	}
