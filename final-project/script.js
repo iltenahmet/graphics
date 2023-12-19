@@ -4,13 +4,15 @@ let uProj = null;
 let uModel = null;
 let uView = null;
 let uIsSphere = null;
+let uIsSkeleton = null;
 let uTime = null;
 
 let view = null;
 let viewMoveSpeed = 0.5;
 let viewRotateSpeed = 0.03;
 
-let viewPos = new vec3(0, 0, -10);
+let initialPos = new vec3(0, 0, -30);
+let viewPos = initialPos;
 let target = viewPos.subtract(new vec3(0, 0, -1));
 let viewDirection = target.subtract(viewPos); 
 
@@ -22,13 +24,24 @@ let fragmentShader = "";
 
 let w, a, s, d, e, q, up, down, left, right, space = false;
 
-let platform = createPlatform(32, 32);
+let platform = createPlatform(40, 40);
 
 let projectiles = [ ];
 let projectilesDir = [ ];
 let projectileSpeed = 1;
 let lastProjectileTime = Date.now() / 1000;
 let projectileWaitDuration = 0.2;
+
+let projectileLastKilled = Date.now() / 1000;
+let projectileLifetime = 5;
+
+let skeletons = [ new vec3(5, 0, 5)];
+let skeletonSpeed = 0.1;
+let skeletonLastSpawned = Date.now() / 1000;
+let skeletonSpawnTime = 2;
+
+let killCount = 0;
+let maxCount = 0;
 
 main();
 
@@ -47,10 +60,12 @@ function afterTimeOut() {
 	uProj = gl.getUniformLocation(gl.program, "uProj");
 	uView = gl.getUniformLocation(gl.program, "uView");
 	uIsSphere = gl.getUniformLocation(gl.program, "uIsSphere");
+	uIsSkeleton = gl.getUniformLocation(gl.program, "uIsSkeleton");
 	uTime = gl.getUniformLocation(gl.program, "uTime");
 
-    // source: https://opengameart.org/content/tileable-metal-textures-treadplate1png
+    // source: https://opengameart.org
 	addTexture(0, 'metal.png');
+	addTexture(1, 'skeleton.png');
 
 	let textures = gl.getUniformLocation(gl.program, "textures");
 	gl.uniform1iv(textures, [0,1]);
@@ -63,22 +78,25 @@ function afterTimeOut() {
 
 function tick() {
 	let time = Date.now() / 1000 - startTime;
+	document.getElementById('killCount').textContent = `Kill Count: ${killCount}`;
+	document.getElementById('maxCount').textContent = `Max Count: ${maxCount}`;
 
 	gl.uniform1f(uTime, time);
 
-	let proj = mPerspectiveNO(0.78, canvas1.width / canvas1.height, 0.1, 10000); 
+	let proj = mPerspectiveNO(0.78, canvas1.width / canvas1.height, 0.1, 1000); 
 	
-	handleInput();	
-
+	viewDirection = target.subtract(viewPos);
 	view = lookAt(viewPos, target, new vec3(0,1,0));
 	view = mInverse(view);
   
+	handleInput();	
+
 	// draw platform
 	for(let i = 0; i < platform.length; i++)
 	{
 		let m = mIdentity();
 		m = mTranslate(platform[i].x, platform[i].y, platform[i].z, m);
-		drawShape(cube, 'TRIANGLES', m, view, proj, false); 
+		drawShape(cube, 'TRIANGLES', m, view, proj, false, false); 
 	}
 
 	// draw projectiles 
@@ -88,19 +106,69 @@ function tick() {
 		let scaleFactor = 0.2;
 		m = mScale(scaleFactor, scaleFactor, scaleFactor, m);
 		let sphere20 = sphere(20, 10);
-		drawShape(sphere20, 'TRIANGLE_STRIP', m, view, proj, true); 
-
+		drawShape(sphere20, 'TRIANGLE_STRIP', m, view, proj, true, false); 
+	
 		projectiles[i] = projectiles[i].add(projectilesDir[i].multiplyByNum(projectileSpeed));
+
+		if (Date.now() / 1000 - projectileLastKilled > projectileLifetime){ 
+			projectiles.shift();
+			projectilesDir.shift();
+			projectileLastKilled = Date.now() / 1000;
+		}
 	}
 
 	// draw skeletons
+	spawnSkeleton();
+	for (let i = 0; i < skeletons.length; i++) {
+		m = lookAt(skeletons[i], viewPos, new vec3(0,1,0));
+		let dir = skeletons[i].subtract(viewPos);
+		dir.normalize();
+		skeletons[i] = skeletons[i].subtract(dir.multiplyByNum(skeletonSpeed));
+		let plane20 = plane(20, 10); 
+		drawShape(plane20, 'TRIANGLE_STRIP', m, view, proj, false, true);
+	}
+
+	// check if any projectile collides with the skeleton
+	let projectilesToRemove = [];
+	let skeletonsToRemove = [];
+	for (let i = 0; i < projectiles.length; i++) {
+		for (let j = 0; j < skeletons.length; j++) {
+			let diff = projectiles[i].subtract(skeletons[j]); 
+			if (diff.length() < 1) {
+				projectilesToRemove.push(i);
+				skeletonsToRemove.push(j);
+				killCount++;
+				if (killCount > maxCount) maxCount++;
+			}
+		}
+	}
+	
+	// remove projectiles that hit skeletons
+	for (let i = 0; i < projectilesToRemove.length; i++) {
+		projectiles.splice(projectilesToRemove[i], 1);
+		projectilesDir.splice(projectilesToRemove[i], 1);
+	}
+
+	// remove skeletons who have been hit
+	for (let i = 0; i < skeletonsToRemove.length; i++) {
+		skeletons.splice(skeletonsToRemove[i], 1);
+	}
+
+	// check if skeletons collide with us
+	for (let i = 0; i < skeletons.length; i++) {
+		let diff = skeletons[i].subtract(viewPos); 
+		if (diff.length() < 1.5) {
+			restartGame();
+		}
+	}
 }
 
-function drawShape(vertices, type, model, view, proj, isSphere) {
+function drawShape(vertices, type, model, view, proj, isSphere, isSkeleton) {
 	gl.uniformMatrix4fv(uProj, false, proj);
 	gl.uniformMatrix4fv(uView, false, view);
 	gl.uniformMatrix4fv(uModel , false, model);
 	gl.uniform1i(uIsSphere, isSphere);
+	gl.uniform1i(uIsSkeleton, isSkeleton);
 	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 	gl.drawArrays(type == 'TRIANGLES' ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, vertices.length / vertexSize);
 }
@@ -222,7 +290,6 @@ function handleInput() {
 		
 		let bAdd = true;
 		if (s || a) bAdd = false;	  
-		
 
 		viewPos = bAdd ? viewPos.add(dir) : viewPos.subtract(dir);	
 		target = bAdd ? target.add(dir) : target.subtract(dir);
@@ -243,8 +310,6 @@ function handleInput() {
 
 		// bring it back the same distance
 		target = target.add(viewPos);
-
-		viewDirection = target.subtract(viewPos);
 	}
 
 	if (space) {
@@ -291,4 +356,27 @@ function createPlatform(n, m){
 		}
 	}
 	return out;
+}
+
+function spawnSkeleton() {
+	if (Date.now() / 1000 - skeletonLastSpawned < skeletonSpawnTime) return;
+
+	skeletonLastSpawned = Date.now() / 1000;
+	skeletonSpawnTime -= 0.05;
+
+	let x = (Math.random() - 0.5) * 20;
+	let z = (Math.random() - 0.5) * 20;
+
+	skeletons.push(new vec3(x, 0, z));
+}
+
+function restartGame() {
+	projectiles = [];
+	projectilesDir = [ ];
+	skeletons = [ new vec3(5, 0, 5)];
+	skeletonSpawnTime = 2;
+	killCount = 0;
+	viewPos = initialPos;
+	target = viewPos.subtract(new vec3(0, 0, -1));
+	viewDirection = target.subtract(viewPos); 
 }

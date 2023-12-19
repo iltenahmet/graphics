@@ -1,6 +1,6 @@
 function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 	// GET THE 3D CONTEXT OF THE CANVAS
-	let gl = canvas.getContext("webgl");
+	let gl = canvas.getContext("webgl", {premultipliedAlpha: false});
 
 	// CREATE A PROGRAM THAT WILL RUN ON THE GPU
 	let program = gl.createProgram();
@@ -30,8 +30,13 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
 
 	// PERMIT THE GPU TO RENDER NEARER THINGS IN FRONT OF FARTHER AWAY THINGS
-	gl.enable(gl.DEPTH_TEST);
-	gl.depthFunc(gl.LEQUAL);
+	//gl.enable(gl.DEPTH_TEST);
+	//gl.depthFunc(gl.LEQUAL);
+	
+	// make sure transparent png is ptransparent
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+	gl.enable(gl.BLEND);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);  // unpremultiplied alpha
 
 	// SET ANY ONE ATTRIBUTE OF A VERTEX
 	let vertexAttribute = (name, size, position) => {

@@ -1,9 +1,8 @@
-function createTriangleStrip (nu, nv, p) {
+let createTriangleStrip = (nu, nv, p) => {
 	let vertices = [];
 	for (let j = nv ; j > 0 ; j--) {
-		for (let i = 0 ; i <= nu ; i++) {
+		for (let i = 0 ; i <= nu ; i++)
 			vertices.push(p(i/nu,j/nv), p(i/nu,j/nv-1/nv));
-		}
 		vertices.push(p(1,j/nv-1/nv), p(0,j/nv-1/nv));
 	}
 	let triangleStrip = new Float32Array(vertices.flat());
@@ -28,7 +27,7 @@ function sphere_p(u, v) {
 }
 
 let plane = (nu, nv) => createTriangleStrip(nu, nv, (u,v) => {
-   return [ 2*u-1,2*v-1,0,  0,0,1, u,v, 1,0,0 ]
+   return [ 2*u-1,2*v-1,0,  0,0,1,  u,v]
 });
 
 let strToTris = str => {

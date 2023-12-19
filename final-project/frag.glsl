@@ -5,8 +5,9 @@ varying vec3 vNor;
 varying vec2 texCoord;
 
 uniform float uTime;
-uniform sampler2D textures[1];
+uniform sampler2D textures[2];
 uniform bool uIsSphere;
+uniform bool uIsSkeleton;
 
 float noise(vec3 point) { 
 	float r = 0.; 
@@ -34,34 +35,26 @@ float turbulence(vec3 pos) {
 	return frequency * 10.;
 }
 
-vec3 blood(vec3 pos) {
-	float turbulenceValue = turbulence(pos);
-	return vec3(turbulenceValue / 2., pow(turbulenceValue, 2.) / 2., pow(turbulenceValue, 2.) / 2.);
-}
-
-vec3 marble(vec3 pos) {
-   float v = turbulence(pos);
-   float s = sqrt(.5 + .5 * sin(20. * pos.x + 8. * v));
-   return vec3(.8,.7,.5) * vec3(s,s*s,s*s*s);
-}
-
-
 void main(void) {
 	vec3 nor = normalize(vNor);
+	float alpha = 1.0;
 
 	//ligthing
 	vec3 color = vec3(.2) + max(0., -nor.z) * vec3(.3,.4,.6) + max(0.,nor.z) * vec3(.6,.4,.3);
 	color +=  max(0., -nor.y) * vec3(.3,.3,.6)+ max(0.,nor.y) * vec3(.55,.4,.4);
 	color +=  max(0., -nor.x) * vec3(.3,.3,.6)+ max(0.,nor.x) * vec3(.55,.4,.4);
 
-	if (!uIsSphere) {
+	if (uIsSphere) {
+		color *= vec3(1.0, 0.1, 0.1);
+	} else if (uIsSkeleton) {
+		vec4 texture = texture2D(textures[1], texCoord);
+		color *= texture2D(textures[1], texCoord).rgb;
+		color *= turbulence(vPos) *  0.5;
+		if (color.r + color.g + color.b < 0.1) alpha = 0.0;
+	} else {
 		vec4 texture = texture2D(textures[0], texCoord);
 		color *= texture2D(textures[0], texCoord).rgb;
 	}
 
-	if (uIsSphere) {
-		color *= vec3(1.0, 0.1, 0.1);
-	}
-
-	gl_FragColor = vec4(color, 1.0);
+	gl_FragColor = vec4(color, alpha);
 }

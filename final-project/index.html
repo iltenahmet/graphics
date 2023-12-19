@@ -2,28 +2,59 @@
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="style.css">
+	<title> Skeleton Smash by Ahmet Ilten</title>
 </head>
 <style>
-body {
-    min-height: 100vh;
-    min-width: 100vw;
-    margin: 0;
-    padding: 0;
-    background-color: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+	body {
+		margin: 0;
+		padding: 0;
+		background-color: black;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+		color: white;
+		font-family: Arial, sans-serif; 
+	}
 
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
+
+	h2 {
+		position: absolute;
+		top: 0px;
+		margin: 10px;
+	}
+
+	p {
+		position: absolute;
+		top: 35px;
+	}
+
+    #killCount {
+		position: absolute;
+		top: 65px;
+		margin-right: 120px;
+    }
+
+    #maxCount{
+		position: absolute;
+		top: 65px;
+		margin-left: 120px;
+
+    }
+	canvas {
+		display: block;
+		position: absolute;
+		border: 1px solid white;
+		top: 120px;
+	}
 
 </style>
 <body>
-    <canvas id="canvas1" width="1280" height="720"></canvas>
+	<h2> Skeleton SMASH </h2>
+	<p>Use WASD keys to move, arrow keys to rotate, and space to shoot. </p>
+    <p id="killCount">Kill Count: 0</p>
+    <p id="maxCount">Max Count: 0</p>
+    <canvas id="canvas1" width="800" height="550"></canvas>
     <script type="text/javascript" src="vec.js"></script>
     <script type="text/javascript" src="gl.js"></script>
     <script type="text/javascript" src="matrix.js"></script>
