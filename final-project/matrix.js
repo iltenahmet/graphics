@@ -51,224 +51,69 @@ let mPerspective = (fl, m) => {
    return mMult(m, [1,0,0,0, 0,1,0,0, 0,0,1,-1/fl, 0,0,0,1]);
 }
 
+function mMultVec4(m, vec4) {
+    let r1 = m.slice(0, 4);
+    let r2 = m.slice(4, 8);
+    let r3 = m.slice(8, 12);
+    let r4 = m.slice(12, 16);
 
-// inputs are vec3
-let mLookAt = (position, target, world_up) => {
-   let direction = position.subtract(target);
-   direction.normalize();
-
-   let right = world_up.cross(direction);
-   right.normalize();
-
-   let up = right.cross(direction);
-   up.normalize();
-
-   let m1 = [ right.x,     right.y,     right.z,     0,
-			  up.x,        up.y,        up.z   ,     0,
-			  direction.x, direction.y, direction.z, 0,
-			  0,           0,           0,           1  ];
-
-   let m2 = [1, 0, 0, -position.x,
-			 0, 1, 0, -position.y,
-			 0, 0, 1, -position.z,
-			 0, 0, 0,  1          ];
-
-   return mMult(m1, m2);
+    return [r1[0] * vec4[0] + r1[1] * vec4[1] + r1[2] * vec4[2] + r1[3] * vec4[3], 
+	    r2[0] * vec4[0] + r2[1] * vec4[1] + r2[2] * vec4[2] + r2[3] * vec4[3],
+	    r3[0] * vec4[0] + r3[1] * vec4[1] + r3[2] * vec4[2] + r3[3] * vec4[3], 
+	    r4[0] * vec4[0] + r4[1] * vec4[1] + r4[2] * vec4[2] + r4[3] * vec4[3] ];
 }
 
-function lookAt(out, eye, center, up) {
-  let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
-  let eyex = eye[0];
-  let eyey = eye[1];
-  let eyez = eye[2];
-  let upx = up[0];
-  let upy = up[1];
-  let upz = up[2];
-  let centerx = center[0];
-  let centery = center[1];
-  let centerz = center[2];
-
-  if (
-    Math.abs(eyex - centerx) < 0.0001 &&
-    Math.abs(eyey - centery) < 0.0001 &&
-    Math.abs(eyez - centerz) < 0.0001
-  ) {
-    return mIdentity();
-  }
-
-  z0 = eyex - centerx;
-  z1 = eyey - centery;
-  z2 = eyez - centerz;
-
-  len = 1 / Math.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
-  z0 *= len;
-  z1 *= len;
-  z2 *= len;
-
-  x0 = upy * z2 - upz * z1;
-  x1 = upz * z0 - upx * z2;
-  x2 = upx * z1 - upy * z0;
-  len = Math.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
-  if (!len) {
-    x0 = 0;
-    x1 = 0;
-    x2 = 0;
-  } else {
-    len = 1 / len;
-    x0 *= len;
-    x1 *= len;
-    x2 *= len;
-  }
-
-  y0 = z1 * x2 - z2 * x1;
-  y1 = z2 * x0 - z0 * x2;
-  y2 = z0 * x1 - z1 * x0;
-
-  len = Math.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
-  if (!len) {
-    y0 = 0;
-    y1 = 0;
-    y2 = 0;
-  } else {
-    len = 1 / len;
-    y0 *= len;
-    y1 *= len;
-    y2 *= len;
-  }
-
-  out[0] = x0;
-  out[1] = y0;
-  out[2] = z0;
-  out[3] = 0;
-  out[4] = x1;
-  out[5] = y1;
-  out[6] = z1;
-  out[7] = 0;
-  out[8] = x2;
-  out[9] = y2;
-  out[10] = z2;
-  out[11] = 0;
-  out[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
-  out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
-  out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
-  out[15] = 1;
-
-  return out;
+// Learned how look at works from: https://webglfundamentals.org/webgl/lessons/webgl-3d-camera.html
+function lookAt(pos, target, up) {
+	let z = pos.subtract(target); 
+	z.normalize();
+	let x = up.cross(z); 
+	x.normalize();
+	let y = z.cross(x);
+	y.normalize();
+	
+	return [
+	   x.x, x.y, x.z, 0,
+	   y.x, y.y, y.z, 0,
+	   z.x, z.y, z.z, 0,
+	   pos.x, pos.y, pos.z, 1];
 }
 
 /**
- * This function is from https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L1623
+ * This function is from: https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L1623
  * which is published under the MIT license.
  */
-function mPerspectiveFromFieldOfView(out, fov, near, far) {
-  let upTan = Math.tan((fov.upDegrees * Math.PI) / 180.0);
-  let downTan = Math.tan((fov.downDegrees * Math.PI) / 180.0);
-  let leftTan = Math.tan((fov.leftDegrees * Math.PI) / 180.0);
-  let rightTan = Math.tan((fov.rightDegrees * Math.PI) / 180.0);
-  let xScale = 2.0 / (leftTan + rightTan);
-  let yScale = 2.0 / (upTan + downTan);
+function mPerspectiveNO(fovy, aspect, near, far) {
+	let out = [];
 
-  out[0] = xScale;
-  out[1] = 0.0;
-  out[2] = 0.0;
-  out[3] = 0.0;
-  out[4] = 0.0;
-  out[5] = yScale;
-  out[6] = 0.0;
-  out[7] = 0.0;
-  out[8] = -((leftTan - rightTan) * xScale * 0.5);
-  out[9] = (upTan - downTan) * yScale * 0.5;
-  out[10] = far / (near - far);
-  out[11] = -1.0;
-  out[12] = 0.0;
-  out[13] = 0.0;
-  out[14] = (far * near) / (near - far);
-  out[15] = 0.0;
-  return out;
+    const f = 1.0 / Math.tan(fovy / 2);
+    out[0] = f / aspect;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+
+    out[4] = 0;
+    out[5] = f;
+    out[6] = 0;
+    out[7] = 0;
+
+    out[8] = 0;
+    out[9] = 0;
+    out[11] = -1;
+
+    out[12] = 0;
+    out[13] = 0;
+    out[15] = 0;
+
+    if (far != null && far !== Infinity) {
+		const nf = 1 / (near - far);
+		out[10] = (far + near) * nf;
+		out[14] = 2 * far * near * nf;
+    } else {
+		out[10] = -1;
+		out[14] = -2 * near;
+    }
+
+    return out;
 }
 
-/**
- * This function is from https://github.com/toji/gl-matrix/blob/master/src/mat4.js#L1623
- * which is published under the MIT license.
- */
-function mPerspectiveNO(out, fovy, aspect, near, far) {
-  const f = 1.0 / Math.tan(fovy / 2);
-  out[0] = f / aspect;
-  out[1] = 0;
-  out[2] = 0;
-  out[3] = 0;
-  out[4] = 0;
-  out[5] = f;
-  out[6] = 0;
-  out[7] = 0;
-  out[8] = 0;
-  out[9] = 0;
-  out[11] = -1;
-  out[12] = 0;
-  out[13] = 0;
-  out[15] = 0;
-  if (far != null && far !== Infinity) {
-    const nf = 1 / (near - far);
-    out[10] = (far + near) * nf;
-    out[14] = 2 * far * near * nf;
-  } else {
-    out[10] = -1;
-    out[14] = -2 * near;
-  }
-  return out;
-}
-
-/*
-// sets the top element in the stack to the value
-let mStackSet = (st, value) => {
-	st[st.length - 1] = value;
-}
-
-let mStackTop = (st) => {
-	return st[st.length - 1];
-}
-
-let mStackPop = (st) => {
-	st.pop(st);
-}
-
-let mStackDuplicate = (st) => {
-	st.push(mStackTop(st));
-}
-
-
-let mStackMove = (st, x, y, z) => {
-	let matrix = mMult(mStackTop(st), [1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
-	mStackSet(matrix);	
-}
-
-let mStackRotateX= (st, t) => {
-	let matrix = mMult(mStackTop(st), [1,0,0,0, 0,c(t),s(t),0, 0,-s(t),c(t),0, 0,0,0,1]);
-	mStackSet(matrix);
-}
-
-let mStackRotateY= (st, t) => {
-	let matrix = mMult(mStackTop(), [c(t),0,-s(t),0, 0,1,0,0, s(t),0,c(t),0, 0,0,0,1]);
-	mStackSet(matrix);
-}
-
-let mStackRotateZ = (t) => {
-	let matrix = mMult(mStackTop(), [c(t),s(t),0,0, -s(t),c(t),0,0, 0,0,1,0, 0,0,0,1]);
-	mStackSet(matrix);
-}
-
-let mStackScale = (x, y, z) => {
-	let matrix = mMult(mStackTop(), [x,0,0,0, 0,y,0,0, 0,0,z,0, 0,0,0,1]);
-	mStackSet(matrix);
-}
-
-let mStackProject = (x, y, z) => {
-	let matrix = mMult(mStackTop(), [1,0,0,x, 0,1,0,y, 0,0,1,z, 0,0,0,1]);
-	mStackSet(matrix);
-}
-
-let mStackPerspective = (fl) => {
-	let matrix = mMult(mStackTop(), [1,0,0,0, 0,1,0,0, 0,0,1,-1/fl, 0,0,0,1]);
-	mStackSet(matrix);
-}
-*/

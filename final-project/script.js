@@ -3,26 +3,37 @@ let gl = null;
 let uProj = null; 
 let uModel = null;
 let uView = null;
+let uIsSphere = null;
+let uTime = null;
 
 let view = null;
-let cameraMoveSpeed = 1;
-let cameraRotateSpeed = 0.1;
+let viewMoveSpeed = 0.5;
+let viewRotateSpeed = 0.03;
 
-cameraPos   = new vec3(0.0, 0.0,  0);
-cameraFront = new vec3(0.0, 0.0, -1);
-cameraUp    = new vec3(0.0, 1.0,  0.0);
+let viewPos = new vec3(0, 0, -10);
+let target = viewPos.subtract(new vec3(0, 0, -1));
+let viewDirection = target.subtract(viewPos); 
 
 let startTime = 0;
 
-let vertexSize = 5;
+let vertexSize = 8;
 let vertexShader = "";
 let fragmentShader = "";
 
-let w, a, s, d = false;
+let w, a, s, d, e, q, up, down, left, right, space = false;
+
+let platform = createPlatform(32, 32);
+
+let projectiles = [ ];
+let projectilesDir = [ ];
+let projectileSpeed = 1;
+let lastProjectileTime = Date.now() / 1000;
+let projectileWaitDuration = 0.2;
+
 main();
 
 async function main() {
-	vertexShader =  await fetchShader("./vert.glsl");
+    vertexShader =  await fetchShader("./vert.glsl");
 	fragmentShader = await fetchShader("./frag.glsl");
 	document.addEventListener('keydown', handleKeyDown);
 	document.addEventListener('keyup', handleKeyUp);
@@ -35,15 +46,16 @@ function afterTimeOut() {
 	uModel = gl.getUniformLocation(gl.program, "uModel");
 	uProj = gl.getUniformLocation(gl.program, "uProj");
 	uView = gl.getUniformLocation(gl.program, "uView");
+	uIsSphere = gl.getUniformLocation(gl.program, "uIsSphere");
+	uTime = gl.getUniformLocation(gl.program, "uTime");
 
-	addTexture(0, 'container.jpg');
-	addTexture(1, 'skeleton.png');
+    // source: https://opengameart.org/content/tileable-metal-textures-treadplate1png
+	addTexture(0, 'metal.png');
 
 	let textures = gl.getUniformLocation(gl.program, "textures");
 	gl.uniform1iv(textures, [0,1]);
 
 	view = mTranslate(0, 0, -10, mIdentity()); 
-
 
 	startTime = Date.now() / 1000;
 	setInterval(tick, 30);
@@ -52,73 +64,45 @@ function afterTimeOut() {
 function tick() {
 	let time = Date.now() / 1000 - startTime;
 
-	let  cubePositions = [
-	   new vec3( 0.0,  0.0,  0.0), 
-	   new vec3( 4,  5, 5), 
-	   new vec3(-4, 2, -20),  
-	   new vec3(0, 10, -12.3),  
-	   new vec3( 0, 3, 5),  
-	   new vec3(-1.7,  3.0, -7.5),  
-	   new vec3( 1.3, -2.0, -2.5),  
-	   new vec3( 1.5,  2.0, -2.5), 
-	   new vec3( 1.5,  0.2, -1.5), 
-	   new vec3(-1.3,  1.0, -1.5)  
-	];
+	gl.uniform1f(uTime, time);
 
-	//let proj = mPerspectiveFromFieldOfView(mIdentity(), 0.78, 0.1, 100); 
-	//let proj = mPerspective(0.7, mIdentity());
+	let proj = mPerspectiveNO(0.78, canvas1.width / canvas1.height, 0.1, 10000); 
 	
-	let proj = mPerspectiveNO(mIdentity(), 0.78, 1.0, 0.1, 100); 
+	handleInput();	
 
-	let camY = cos(time / 10);
-	let camZ = sin(time / 10);
-
-
-	
-	if (w) {
-		view = mTranslate(0, 0, cameraMoveSpeed, view); 
-	} 
-
-	if (s) {
-		view = mTranslate(0, 0, -cameraMoveSpeed, view); 
-
-	}
-
-	if (a) {
-		//view = mRotateY(cameraRotateSpeed, view);
-		//cameraFront = new vec3(cameraFront.x, cameraFront.y, cameraFront.z - 1);
-		cameraPos = new vec3(cameraPos.x, cameraPos.y, cameraPos.z - 1);
-		view = mLookAt(cameraPos, cameraPos.add(cameraFront), cameraUp); 
-	}
-
-	if (d) {
-		view = mRotateY(-cameraRotateSpeed, view);
-	}
-	
-	
-	for(let i = 0; i < 10; i++)
+	view = lookAt(viewPos, target, new vec3(0,1,0));
+	view = mInverse(view);
+  
+	// draw platform
+	for(let i = 0; i < platform.length; i++)
 	{
 		let m = mIdentity();
-		m = mTranslate(cubePositions[i].x, cubePositions[i].y, cubePositions[i].z, m);
-		let angle = 20.0 * i; 
-		m = mRotateX(angle, m);
-		m = mRotateY(angle * 0.3 , m);
-		m = mRotateY(angle * 0.5, m);
-		m = mScale(0.5, 0.5, 0.5, m);
-
-		drawShape(cube, m, view, proj); 	
+		m = mTranslate(platform[i].x, platform[i].y, platform[i].z, m);
+		drawShape(cube, 'TRIANGLES', m, view, proj, false); 
 	}
 
+	// draw projectiles 
+	for (let i = 0; i < projectiles.length; i++) {
+		let m = mIdentity();
+		m = mTranslate(projectiles[i].x, projectiles[i].y, projectiles[i].z, m);
+		let scaleFactor = 0.2;
+		m = mScale(scaleFactor, scaleFactor, scaleFactor, m);
+		let sphere20 = sphere(20, 10);
+		drawShape(sphere20, 'TRIANGLE_STRIP', m, view, proj, true); 
 
+		projectiles[i] = projectiles[i].add(projectilesDir[i].multiplyByNum(projectileSpeed));
+	}
 
+	// draw skeletons
 }
 
-function drawShape(vertices, model, view, proj) {
+function drawShape(vertices, type, model, view, proj, isSphere) {
 	gl.uniformMatrix4fv(uProj, false, proj);
 	gl.uniformMatrix4fv(uView, false, view);
 	gl.uniformMatrix4fv(uModel , false, model);
+	gl.uniform1i(uIsSphere, isSphere);
 	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-	gl.drawArrays(gl.TRIANGLES, 0, vertices.length / vertexSize);
+	gl.drawArrays(type == 'TRIANGLES' ? gl.TRIANGLES : gl.TRIANGLE_STRIP, 0, vertices.length / vertexSize);
 }
 
 function drawShapeFromStack(mesh, color) {
@@ -154,35 +138,157 @@ async function fetchShader(path) {
 }
 
 function handleKeyDown(event) {
-	switch (event.key) {
-		case 'w':
-			w = true;
-			break;
-		case 'a':
-			a = true;
-			break;
-		case 's':
-			s = true;
-			break;
-		case 'd':
-			d = true;
-			break;
-	}
+    switch (event.key) {
+        case 'w':
+            w = true;
+            break;
+        case 'a':
+            a = true;
+            break;
+        case 's':
+            s = true;
+            break;
+        case 'd':
+            d = true;
+            break;
+        case 'e':
+            e = true;
+            break;
+        case 'q':
+            q = true;
+            break;
+        case 'ArrowUp':
+            up = true;
+            break;
+        case 'ArrowDown':
+            down = true;
+            break;
+        case 'ArrowLeft':
+            left = true;
+            break;
+        case 'ArrowRight':
+            right = true;
+            break;
+		case ' ':
+			space = true;
+    }
 }
 
 function handleKeyUp(event) {
-	switch (event.key) {
-		case 'w':
-			w = false;
+    switch (event.key) {
+        case 'w':
+            w = false;
+            break;
+        case 'a':
+            a = false;
+            break;
+        case 's':
+            s = false;
+            break;
+        case 'd':
+            d = false;
+            break;
+		case 'e':
+            e = false;
+            break;
+        case 'q':
+            q = false;
+            break;
+        case 'ArrowUp':
+            up = false;
+            break;
+        case 'ArrowDown':
+            down = false;
+            break;
+        case 'ArrowLeft':
+            left = false;
+            break;
+        case 'ArrowRight':
+            right = false;
+            break;
+		case ' ':
+			space = false;
 			break;
-		case 'a':
-			a = false;
-			break;
-		case 's':
-			s = false;
-			break;
-		case 'd':
-			d = false;
-			break;
+    }
+}
+
+function handleInput() {
+	if (w || a || d || s) {
+		let dir = viewDirection;
+		if (a || d) dir = viewDirection.cross(new vec3(0, 1, 0));
+
+		dir.normalize();
+		dir.multiplyByNum(viewMoveSpeed);
+		
+		let bAdd = true;
+		if (s || a) bAdd = false;	  
+		
+
+		viewPos = bAdd ? viewPos.add(dir) : viewPos.subtract(dir);	
+		target = bAdd ? target.add(dir) : target.subtract(dir);
+	} 
+
+	if (left || right) {
+		// send target around origin
+		target = target.subtract(viewPos);
+
+		// rotate around origin
+		let m = mIdentity();
+		if (left) m = mRotateY(-viewRotateSpeed, m);
+		if (right) m = mRotateY(viewRotateSpeed, m);
+		let v4 = mMultVec4(m, [target.x, target.y, target.z, 1]);
+		target.x = v4[0];
+		target.y = v4[1];
+		target.z = v4[2];
+
+		// bring it back the same distance
+		target = target.add(viewPos);
+
+		viewDirection = target.subtract(viewPos);
 	}
+
+	if (space) {
+		if ((Date.now() / 1000) - lastProjectileTime < projectileWaitDuration) return;
+		lastProjectileTime = Date.now() / 1000;
+
+		projectiles.push(new vec3(viewPos.x, viewPos.y - 0.5, viewPos.z));
+		viewDirection.normalize();
+		projectilesDir.push(new vec3(viewDirection.x, viewDirection.y, viewDirection.z));
+	}
+}
+
+function createPlatform(n, m){
+	let out = [];
+	//ground
+	for (let i = -n; i < n; i++){
+		for (let j = -m; j < m; j++) {
+			out.push(new vec3(i, -3, j));
+		}
+	}
+
+	//walls
+	for (let i = -n; i < n; i++) {
+		for (let j = -2; j < 4; j++) {
+			out.push(new vec3(i, j, -n));
+		}
+	}
+
+	for (let i = -n; i < n; i++) {
+		for (let j = -2; j < 4; j++) {
+			out.push(new vec3(i, j, n));
+		}
+	}
+
+	for (let i = -m; i < m; i++) {
+		for (let j = -2; j < 4; j++) {
+			out.push(new vec3(m, j, i));
+		}
+	}
+
+	for (let i = -m; i < m; i++) {
+		for (let j = -2; j < 4; j++) {
+			out.push(new vec3(-m, j, i));
+		}
+	}
+	return out;
 }

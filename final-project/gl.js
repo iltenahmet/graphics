@@ -41,14 +41,9 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 	}
 
 	
-	// Vertex structure: pos: x y z normal: Nx Ny Nz  textureCoordinates: u v  Tangent: Tx Ty Tz
 	vertexAttribute('aPos', 3, 0);
-	//vertexAttribute('aNor', 3, 3);
-	//vertexAttribute('aUV' , 2, 6);
-	//vertexAttribute('aTan', 3, 8);
-	
-
-	vertexAttribute('aUV', 2, 3);
+	vertexAttribute('aNor', 3, 3);
+	vertexAttribute('aUV', 2, 6);
 
 	return gl;
 }
