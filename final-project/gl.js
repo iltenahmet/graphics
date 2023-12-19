@@ -30,8 +30,8 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
 
 	// PERMIT THE GPU TO RENDER NEARER THINGS IN FRONT OF FARTHER AWAY THINGS
-	//gl.enable(gl.DEPTH_TEST);
-	//gl.depthFunc(gl.LEQUAL);
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
 	
 	// make sure transparent png is ptransparent
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
@@ -44,7 +44,6 @@ function start_gl(canvas, vertexSize, vertexShader, fragmentShader) {
 		gl.enableVertexAttribArray(attr);
 		gl.vertexAttribPointer(attr, size, gl.FLOAT, false, vertexSize * 4, position * 4);
 	}
-
 	
 	vertexAttribute('aPos', 3, 0);
 	vertexAttribute('aNor', 3, 3);
