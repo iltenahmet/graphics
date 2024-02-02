@@ -1,4 +1,4 @@
-# Grahpics Programming Projects
+# Graphics Programming Projects
 
 These projects are done as part of [Ken Perlin](https://cs.nyu.edu/~perlin/)'s graphics course at NYU. 
 
